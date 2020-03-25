@@ -6,8 +6,11 @@ from PIL import Image
 from io import BytesIO
 
 # TCPClient
+"""
+Author:Later
+Time:2020/3/25 20:39
+"""
 
-# receive_count: int = 0
 
 
 def start_tcp_client(ip, port):
@@ -44,31 +47,40 @@ def start_tcp_client(ip, port):
             # s.send(msg.encode('utf-8'))
             # print("send len is : [%d]" % len(msg))
 
-            msg = s.recv(2048+602)
+            msg = s.recv(1024)
             pic_data += msg
             # print(msg.decode('utf-8'))
             print(msg)
             print("recv len is : [%d]" % len(msg))
 
             # 做分离处理
-            if len(pic_data) == (2048 + 602):
+            if pic_data.hex().find("ffd8") != -1 and pic_data.hex().find("ffd9") != -1:
                 # 接收的字节
                 print(pic_data)
-                # 提取完整图片字节为hexStr
+                # 提取完整图片(最前面的一帧)字节为hexStr,用于正则表达式
                 pic = re.findall(r'ffd8(.+?)ffd9', pic_data.hex())  # 正则表达式匹配长江学者人数  提取“长江学者”和其后的“人”之间的字符，返回一个列表
-                pic = 'ffd8'+pic+'ffd9'
+                pic = 'ffd8'+pic[0]+'ffd9'
                 print(pic)
                 # 将16进制hexStr转回字节数组
-                pic.decode("hex")
+                pic = bytes.fromhex(pic)
                 # 将bytes结果转化为字节流
                 bytes_stream = BytesIO(pic)
                 # 读取到图片
                 jpg = Image.open(bytes_stream)
                 jpg.show()  #展示图片
+                # 清除缓冲器 todo: 移除ffd9及其之前的部分
+                new = re.findall(r'ffd9(.+?)', pic_data.hex())  # 正则表达式匹配长江学者人数  提取“长江学者”和其后的“人”之间的字符，返回一个列表
+                print("new: " + new[0])
+                # 防止接收包恰好ffd9结尾,以及以0结尾
+                if len(new) > 0 and new[0] != '0':
+                    pic_data = bytes.fromhex(new[0])
+                else:
+                    pic_data = b''
+
         break
 
     s.close()
 
 
 if __name__ == '__main__':
-    start_tcp_client('192.168.1.101', 6000)
+    start_tcp_client('192.168.0.8', 8089)
