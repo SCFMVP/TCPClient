@@ -1,9 +1,11 @@
 import re
 import socket
+import matplotlib.pyplot as plt   #导入matplotlib
 import sys
 #PIL图像处理标准库
 from PIL import Image
 from io import BytesIO
+
 
 # TCPClient
 """
@@ -11,10 +13,12 @@ Author:Later
 Time:2020/3/25 20:39
 """
 
-
+# todo: 视频流展示
 
 def start_tcp_client(ip, port):
     pic_data = b''
+    plt.figure()
+
     # 创建socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -67,8 +71,14 @@ def start_tcp_client(ip, port):
                 bytes_stream = BytesIO(pic)
                 # 读取到图片
                 jpg = Image.open(bytes_stream)
-                jpg.show()  #展示图片
-                # 清除缓冲器 todo: 移除ffd9及其之前的部分
+                # 展示图片
+                jpg.show()
+                # 展示视频
+                # plt.imshow(jpg)
+                # plt.xticks([])
+                # plt.yticks([])
+                # plt.show()
+                # 清除缓冲器
                 new = re.findall(r'ffd9(.+?)', pic_data.hex())  # 正则表达式匹配长江学者人数  提取“长江学者”和其后的“人”之间的字符，返回一个列表
                 print("new: " + new[0])
                 # 防止接收包恰好ffd9结尾,以及以0结尾
